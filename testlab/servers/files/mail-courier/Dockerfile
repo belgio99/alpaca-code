@@ -2,9 +2,15 @@
 FROM debian:latest
 
 RUN mkdir -p /var/run/courier/authdaemon/ && touch /var/run/courier/authdaemon/pid.lock
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y courier-imap courier-pop courier-authlib-mysql courier-mta gamin rsyslog
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+	courier-imap \
+	courier-pop \
+	courier-authlib-mysql \
+	courier-mta \
+	rsyslog \
+	rpcbind
 RUN mkdir /var/log/courier/
-RUN ln -s /bin/mkdir /usr/bin/mkdir
+# mkdir is already available at /usr/bin/mkdir in Debian; no need to symlink
 RUN useradd bob -d /home/bob
 RUN echo bob:12345 | chpasswd
 RUN mkdir /home/bob/
@@ -14,4 +20,5 @@ RUN chmod -R 777 /home/bob/Maildir
 RUN chown -R bob:bob /home/bob
 EXPOSE 110/tcp 143/tcp
 ADD entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

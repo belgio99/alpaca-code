@@ -9,4 +9,4 @@ session_set_cookie_params([
 session_start();
 ?>
 <h1>Very Important Page!</h1>
-<b>In the background a cookie was set with session_id <?php echo session_id(); ?> for target.com</b>
+<b>In the background a cookie was set with session_id <?php echo session_id(); ?> for target.local</b>

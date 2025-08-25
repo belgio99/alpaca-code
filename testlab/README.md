@@ -58,8 +58,8 @@ cd mitmproxy
 python3 main.py --proto FTP --attacker_ip 127.0.0.2 127.0.0.1 21
 ```
 
-The Proxy is now running in unarmed mode. You can open Firefox and visit https://target.com. 
-The server on target.com will set a cookie with the displayed session ID.
+The Proxy is now running in unarmed mode. You can open Firefox and visit https://target.local. 
+The server on target.local will set a cookie with the displayed session ID.
 
 After that, switch the proxy to armed mode by pressing any key in the console window. 
 
@@ -70,10 +70,10 @@ Here you can choose between two attacks (Upload und Download)
 
 1. Download
 
-If you click on download, you will see a white page for aprox. 5 seconds, then the browser redirects to target.com and show an alert box.
+If you click on download, you will see a white page for aprox. 5 seconds, then the browser redirects to target.local and show an alert box.
 
 2. Upload
 
-If you click on Upload, the browser will navigate to the attack page and than, after 5 seconds redirect to target.com.
+If you click on Upload, the browser will navigate to the attack page and than, after 5 seconds redirect to target.local.
 In the second console windows with the logs you can now also see the uploaded GET request of the browser including the cookie.
  

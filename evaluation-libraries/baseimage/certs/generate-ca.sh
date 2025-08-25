@@ -64,8 +64,8 @@ openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in wrong-cn.com.key -out
 #cp "$DIR_MAC/pki/issued/attacker.com.crt" "$DIR/servers/files/cert/"
 #cp "$DIR_MAC/pki/private/attacker.com.key" "$DIR/servers/files/cert/"
 #
-#${path}easyrsa --req-cn="target.com" gen-req target.com nopass
-#${path}easyrsa sign-req server target.com
+#${path}easyrsa --req-cn="target.local" gen-req target.local nopass
+#${path}easyrsa sign-req server target.local
 #
-#cp "$DIR_MAC/pki/issued/target.com.crt" "$DIR/servers/files/cert/"
-#cp "$DIR_MAC/pki/private/target.com.key" "$DIR/servers/files/cert/"
+#cp "$DIR_MAC/pki/issued/target.local.crt" "$DIR/servers/files/cert/"
+#cp "$DIR_MAC/pki/private/target.local.key" "$DIR/servers/files/cert/"

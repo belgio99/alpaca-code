@@ -1,7 +1,12 @@
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=UTF-8
+Connection: close
+
+
 <html>
 <head>
 </head>
 <body>
-<script>alert(document.location);</script>
+<script>alert("You've been hacked! XSS on " + document.location);</script>
 </body>
 </html>

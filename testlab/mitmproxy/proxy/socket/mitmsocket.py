@@ -16,13 +16,14 @@ protocol_handler = {'FTP': FTPHandler, 'POP3': POP3Handler, 'POP3S': POP3SHandle
 
 
 class MITMSocketProxy:
-    def __init__(self, attacker_ip, attacker_port, target_ip, target_port, protocol):
+    def __init__(self, attacker_ip, attacker_port, target_ip, target_port, protocol, unarmed_ip=None, unarmed_port=443):
         self.target_ip = target_ip
         self.target_port = target_port
         self.attacker_ip = attacker_ip
         self.attacker_port = attacker_port
-        self.unarmed_target_ip = target_ip
-        self.unarmed_target_port = 443
+        # Allow overriding the unarmed forward target (default was target_ip:443)
+        self.unarmed_target_ip = unarmed_ip if unarmed_ip else target_ip
+        self.unarmed_target_port = unarmed_port
         self.connections = []
         self.handler = protocol_handler[protocol](self.target_ip, self.target_port, self.unarmed_target_ip, self.unarmed_target_port)
         self.armed = False

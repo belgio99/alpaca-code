@@ -22,7 +22,8 @@ def read_tls_packet(conn):
 def forward_tls_handshake_and_data(addr, client_socket, server_socket):
     while True:
         try:
-            ready = select.select([client_socket, server_socket], [], [], 4)
+            # Increase idle timeout to allow full HTTP body and commands to be forwarded
+            ready = select.select([client_socket, server_socket], [], [], 30)
             if not ready[0]:
                 break
             for x in ready[0]:

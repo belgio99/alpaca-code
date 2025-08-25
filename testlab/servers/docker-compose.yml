@@ -9,12 +9,13 @@ services:
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./files/cert/:/etc/nginx/certs/:ro
+    
 
   nginx-target:
     image: php:7.3-apache
     container_name: alpaca-nginx-target
     environment:
-      - VIRTUAL_HOST=target.com
+      - VIRTUAL_HOST=target.local
       - VIRTUAL_PORT=80
     volumes:
       - ./files/nginx-target/html/:/var/www/html/:ro
@@ -45,9 +46,10 @@ services:
     environment:
       - FTP_USER=bob
       - FTP_PASS=12345
-      - PASV_MIN_PORT=10090
+      - PASV_MIN_PORT=10100
       - PASV_MAX_PORT=10100
       - REVERSE_LOOKUP_ENABLE=NO
+    platform: linux/amd64
 
   cyrus:
     image: alpaca-cyrus-imap
